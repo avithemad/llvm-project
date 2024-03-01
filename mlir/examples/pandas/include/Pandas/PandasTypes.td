@@ -28,4 +28,11 @@ def Pandas_CustomType : Pandas_Type<"Custom", "custom"> {
     let assemblyFormat = "`<` $value `>`";
 }
 
+def Pandas_DataframeType : Pandas_Type<"DataframeType", "df"> {
+  let summary = "Pandas dataframe type to hold a dataframe";
+
+  let parameters = (ins "int":$index);
+  let assemblyFormat = "`<` $index `>`";
+}
+
 #endif // PANDAS_TYPES

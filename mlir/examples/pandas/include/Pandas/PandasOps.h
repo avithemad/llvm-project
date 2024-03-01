@@ -15,6 +15,9 @@
 #include "mlir/Interfaces/InferTypeOpInterface.h"
 #include "mlir/Interfaces/SideEffectInterfaces.h"
 
+#define GET_TYPEDEF_CLASSES
+#include "Pandas/PandasOpsTypes.h.inc"
+
 #define GET_OP_CLASSES
 #include "Pandas/PandasOps.h.inc"
 

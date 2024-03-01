@@ -9,11 +9,12 @@
 #ifndef PANDAS_OPS
 #define PANDAS_OPS
 
+include "mlir/IR/BuiltinTypes.td"
 include "Pandas/PandasTypes.td"
 include "mlir/Interfaces/InferTypeOpInterface.td"
 include "mlir/Interfaces/SideEffectInterfaces.td"
 
-def Pandas_FooOp : Pandas_Op<"foo", [Pure]> {
+def Pandas_FooOp : Pandas_Op<"foo"> {
     let summary = "Illustrates how to define an operation.";
     let description = [{
     }];
@@ -31,6 +32,31 @@ def Pandas_FooOp : Pandas_Op<"foo", [Pure]> {
         OpBuilder<(ins "double":$value)>
     ];
     let hasCustomAssemblyFormat = 1;
+}
+
+def Pandas_ReadCsvOp : Pandas_Op<"read_csv"> {
+    let summary = "Operation to read the csv file to construct the dataframe";
+
+    let arguments = (ins StrAttr:$filename);
+    let results = (outs Pandas_DataframeType);
+
+    let assemblyFormat = [{
+        `(` $filename  `)` attr-dict `->` type(results)
+    }];
+
+    let builders = [
+        OpBuilder<(ins "std::string":$filename)>
+    ];
+}
+
+def Pandas_SelectOp : Pandas_Op<"select"> {
+    let summary = "Operation to select columns from a dataframe";
+
+    let arguments = (ins ArrayAttr:$columns, Pandas_DataframeType:$inputdf, Builtin_Tuple:$arf);
+    let results = (outs Pandas_DataframeType:$output);
+    let assemblyFormat = [{
+        `(` $columns `,` $inputdf `:` type($inputdf) `,` $arf `:` type($arf) `)` attr-dict `:` type($output) 
+    }];
 }
 
 #endif // PANDAS_OPS

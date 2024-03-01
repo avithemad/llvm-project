@@ -9,9 +9,4 @@
 #ifndef PANDAS_PANDASTYPES_H
 #define PANDAS_PANDASTYPES_H
 
-#include "mlir/IR/BuiltinTypes.h"
-
-#define GET_TYPEDEF_CLASSES
-#include "Pandas/PandasOpsTypes.h.inc"
-
 #endif // PANDAS_PANDASTYPES_H
