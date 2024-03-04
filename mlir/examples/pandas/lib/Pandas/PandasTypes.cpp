@@ -24,3 +24,7 @@ void PandasDialect::registerTypes() {
 #include "Pandas/PandasOpsTypes.cpp.inc"
       >();
 }
+
+// the dataframe type is defined somethingn like this
+// <<"columnname1", "columntype1">, <"columnname2", "columntype2">>
+

@@ -41,7 +41,7 @@ def Pandas_ReadCsvOp : Pandas_Op<"read_csv"> {
     let results = (outs Pandas_DataframeType);
 
     let assemblyFormat = [{
-        `(` $filename  `)` attr-dict `->` type(results)
+        `(` $filename  `)` attr-dict `:` type(results)
     }];
 
     let builders = [
@@ -49,14 +49,78 @@ def Pandas_ReadCsvOp : Pandas_Op<"read_csv"> {
     ];
 }
 
+// Add new columns to the data frame 
+def Pandas_AddColumnsOp : Pandas_Op<"add_columns"> {
+    let summary = "Operation to add new columns to the dataframe";
+
+    let arguments = (ins Pandas_DataframeType:$df_in, ArrayAttr:$columns);
+    let results = (outs Pandas_DataframeType:$df_out);
+
+    let assemblyFormat = [{
+        `(` $df_in `:` type($df_in) `,` $columns `)` attr-dict `:` type($df_out)
+    }];
+}
+
+// Construct new dataframe from subset of columns
 def Pandas_SelectOp : Pandas_Op<"select"> {
     let summary = "Operation to select columns from a dataframe";
 
-    let arguments = (ins ArrayAttr:$columns, Pandas_DataframeType:$inputdf, Builtin_Tuple:$arf);
-    let results = (outs Pandas_DataframeType:$output);
+    let arguments = (ins Pandas_DataframeType:$df_in, ArrayAttr:$columns);
+    let results = (outs Pandas_DataframeType:$df_out);
     let assemblyFormat = [{
-        `(` $columns `,` $inputdf `:` type($inputdf) `,` $arf `:` type($arf) `)` attr-dict `:` type($output) 
+        `(` $df_in`:`type($df_in)  `,` $columns `)` attr-dict `:` type($df_out) 
     }];
 }
+
+// Access column 
+def Pandas_IndexOp : Pandas_Op<"index"> {
+    let summary = "Operation to select columns from a dataframe";
+
+    let arguments = (ins Pandas_DataframeType:$df_in, StrAttr:$column);
+    let results = (outs Pandas_SeriesType:$ser_out);
+    let assemblyFormat = [{
+        `(` $df_in`:`type($df_in)  `,` $column `)` attr-dict `:` type($ser_out) 
+    }];
+}
+
+// sort by a column. 
+def Pandas_SortbyOp : Pandas_Op<"sortby"> {
+    let summary = "Sort operation on a single column for pandas dataframe";
+
+    let arguments = (ins Pandas_DataframeType:$df_in, StrAttr:$column);
+    let results = (outs Pandas_DataframeType:$df_out);
+    let assemblyFormat = [{
+        `(` $df_in`:`type($df_in) `,` $column `)` attr-dict `:` type($df_out) 
+    }];
+}
+
+
+// Row wise operations add, sub, div, multiply 
+def Pandas_RowwiseAddOp : Pandas_Op<"add"> {
+    let arguments = (ins Pandas_SeriesType:$op1, Pandas_SeriesType:$op2);
+    let results = (outs Pandas_SeriesType:$out);
+    let assemblyFormat = [{
+        `(` $op1`:`type($op1) `,` $op2`:`type($op2) `)` attr-dict `:` type($out) 
+    }];
+}
+// join, input is 2 dataframe, and output is equijoined dataframe 
+def Pandas_JoinOp : Pandas_Op<"join"> {
+    let arguments = (ins Pandas_DataframeType:$op1, Pandas_DataframeType:$op2);
+    let results = (outs Pandas_DataframeType:$out);
+    let assemblyFormat = [{
+        `(` $op1`:`type($op1) `,` $op2`:`type($op2) `)` attr-dict `:` type($out) 
+    }];
+}
+
+// Group by, single/multiple columns along with reductions(sum mean count)
+
+
+// Filtering with a predicate like a where clause 
+
+
+// standalone reductions (sum, mean, count)
+
+
+
 
 #endif // PANDAS_OPS

@@ -15,11 +15,8 @@
 
 namespace mlir {
 namespace pandas {
-#define GEN_PASS_DECL
-#include "Pandas/PandasPasses.h.inc"
 
-#define GEN_PASS_REGISTRATION
-#include "Pandas/PandasPasses.h.inc"
+std::unique_ptr<Pass> createLowerPass();
 } // namespace pandas
 } // namespace mlir
 

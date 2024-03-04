@@ -28,11 +28,27 @@ def Pandas_CustomType : Pandas_Type<"Custom", "custom"> {
     let assemblyFormat = "`<` $value `>`";
 }
 
-def Pandas_DataframeType : Pandas_Type<"DataframeType", "df"> {
+def Pandas_SeriesType : Pandas_Type<"Series", "series"> {
   let summary = "Pandas dataframe type to hold a dataframe";
 
-  let parameters = (ins "int":$index);
-  let assemblyFormat = "`<` $index `>`";
+  let parameters = (ins "std::string":$column, StringRefParameter<"series value">:$type);
+
+  let assemblyFormat = "`<` $column `:` $type `>`";
+}
+
+def Pandas_DataframeType : Pandas_Type<"Dataframe", "df"> {
+  let summary = "Dataframe type";
+
+  let parameters = (ins ArrayRefParameter<"pandas::SeriesType">:$columns);
+
+  let assemblyFormat =  "`<` $columns  `>`";
+
+  let builders = [
+        TypeBuilderWithInferredContext<(ins 
+        "Type":$typeParam), [{
+          return $_get(typeParam.getContext());
+        }]>
+    ];
 }
 
 #endif // PANDAS_TYPES

@@ -7,42 +7,75 @@
 //===----------------------------------------------------------------------===//
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/BuiltinOps.h"
+#include "mlir/IR/BuiltinDialect.h"
 #include "mlir/IR/PatternMatch.h"
+#include "mlir/Dialect/Affine/IR/AffineOps.h"
+#include "mlir/Dialect/Arith/IR/Arith.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Pass/Pass.h"
+#include "mlir/Transforms/DialectConversion.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
+#include "llvm/ADT/Sequence.h"
 
 #include "Pandas/PandasPasses.h"
+#include "Pandas/PandasDialect.h"
+#include "Pandas/PandasOps.h"
 
-namespace mlir::pandas {
-#define GEN_PASS_DEF_PANDASSWITCHBARFOO
-#include "Pandas/PandasPasses.h.inc"
-
+using namespace mlir;
 namespace {
-class PandasSwitchBarFooRewriter : public OpRewritePattern<func::FuncOp> {
-public:
-  using OpRewritePattern<func::FuncOp>::OpRewritePattern;
-  LogicalResult matchAndRewrite(func::FuncOp op,
-                                PatternRewriter &rewriter) const final {
-    if (op.getSymName() == "bar") {
-      rewriter.updateRootInPlace(op, [&op]() { op.setSymName("foo"); });
+  struct PandasLoweringPass 
+    : public PassWrapper<PandasLoweringPass, OperationPass<ModuleOp>> {
+      void getDependentDialects(DialectRegistry &registry) const override {
+        registry.insert<memref::MemRefDialect>();
+      }
+      void runOnOperation() final;
+    };
+}
+
+struct SelectOpLowering : public OpRewritePattern<pandas::SelectOp> {
+  using OpRewritePattern<pandas::SelectOp>::OpRewritePattern;
+
+  LogicalResult matchAndRewrite(pandas::SelectOp op, 
+    PatternRewriter &rewriter) const final {
+      Location loc = op.getLoc();
+
+      auto alloc = rewriter.create<arith::ConstantIndexOp>(loc, 0);
+
+      rewriter.replaceOp(op, alloc);
       return success();
-    }
-    return failure();
   }
 };
 
-class PandasSwitchBarFoo
-    : public impl::PandasSwitchBarFooBase<PandasSwitchBarFoo> {
-public:
-  using impl::PandasSwitchBarFooBase<
-      PandasSwitchBarFoo>::PandasSwitchBarFooBase;
-  void runOnOperation() final {
-    RewritePatternSet patterns(&getContext());
-    patterns.add<PandasSwitchBarFooRewriter>(&getContext());
-    FrozenRewritePatternSet patternSet(std::move(patterns));
-    if (failed(applyPatternsAndFoldGreedily(getOperation(), patternSet)))
-      signalPassFailure();
+struct ReadCsvOpLowering : public OpRewritePattern<pandas::ReadCsvOp> {
+  using OpRewritePattern<pandas::ReadCsvOp>::OpRewritePattern;
+
+  LogicalResult matchAndRewrite(pandas::ReadCsvOp op, 
+    PatternRewriter &rewriter) const final {
+      Location loc = op.getLoc();
+
+      auto alloc = rewriter.create<arith::ConstantIndexOp>(loc, 0);
+
+      rewriter.replaceOp(op, alloc);
+      return success();
   }
 };
-} // namespace
-} // namespace mlir::pandas
+
+void PandasLoweringPass::runOnOperation() {
+  ConversionTarget target(getContext());
+
+  target.addLegalDialect<memref::MemRefDialect, arith::ArithDialect>();
+
+  target.addIllegalDialect<pandas::PandasDialect>();
+
+  RewritePatternSet patterns(&getContext());
+  patterns.add<SelectOpLowering, ReadCsvOpLowering>(&getContext());
+
+  if (failed(applyPartialConversion(getOperation(), target, std::move(patterns))))
+    signalPassFailure();
+}
+
+std::unique_ptr<Pass> mlir::pandas::createLowerPass() {
+  return std::make_unique<PandasLoweringPass>();
+}
+
