@@ -11,6 +11,7 @@
 
 include "mlir/IR/BuiltinTypes.td"
 include "Pandas/PandasTypes.td"
+include "mlir/Dialect/Arith/IR/ArithBase.td"
 include "mlir/Interfaces/InferTypeOpInterface.td"
 include "mlir/Interfaces/SideEffectInterfaces.td"
 
@@ -112,15 +113,59 @@ def Pandas_JoinOp : Pandas_Op<"join"> {
     }];
 }
 
-// Group by, single/multiple columns along with reductions(sum mean count)
-
 
 // Filtering with a predicate like a where clause 
+def Pandas_FilterOp : Pandas_Op<"where"> {
+    let arguments = (ins Pandas_DataframeType:$df, 
+                        Arith_CmpFPredicateAttr:$predicate,
+                        StrAttr:$column,
+                        StrAttr:$value);
+    let results = (outs Pandas_DataframeType:$out);
+    let assemblyFormat = [{
+        `(`$df `:` type($df)`,` $column $predicate $value`)` attr-dict `:` type($out)
+    }];
+}
 
+
+
+// Group by, single/multiple columns along with reductions(sum mean count)
+def Pandas_GroupbyOp : Pandas_Op<"groupby"> {
+    let arguments = (ins Pandas_DataframeType:$df,
+                        ArrayAttr:$columns);
+    //TODO: add verification to see that the column in argument is a set in output dataframe
+    let results = (outs Pandas_DataframeType:$out);
+    let assemblyFormat = [{
+        `(` $df`:`type($df)  `,` $columns `)` attr-dict `:` type($out) 
+    }];
+}
 
 // standalone reductions (sum, mean, count)
-
-
-
+def Pandas_AggsumOp : Pandas_Op<"agg_sum"> {
+    let arguments = (ins AnyTypeOf<[Pandas_DataframeType, Pandas_SeriesType]>:$in);
+    let results = (outs AnyTypeOf<[Pandas_DataframeType, Pandas_SeriesType]>:$out);
+    // TODO: add verification to see if input and output is of same type.
+    // Also if it is dataframe, should have atleast one set type of column.
+    let assemblyFormat = [{
+        `(` $in`:`type($in)`)` attr-dict `:` type($out) 
+    }];
+}
+def Pandas_AggmeanOp : Pandas_Op<"agg_mean"> {
+    let arguments = (ins AnyTypeOf<[Pandas_DataframeType, Pandas_SeriesType]>:$in);
+    let results = (outs AnyTypeOf<[Pandas_DataframeType, Pandas_SeriesType]>:$out);
+    // TODO: add verification to see if input and output is of same type.
+    // Also if it is dataframe, should have atleast one set type of column.
+    let assemblyFormat = [{
+        `(` $in`:`type($in)`)` attr-dict `:` type($out) 
+    }];
+}
+def Pandas_AggcountOp : Pandas_Op<"agg_count"> {
+    let arguments = (ins AnyTypeOf<[Pandas_DataframeType, Pandas_SeriesType]>:$in);
+    let results = (outs AnyTypeOf<[Pandas_DataframeType, Pandas_SeriesType]>:$out);
+    // TODO: add verification to see if input and output is of same type.
+    // Also if it is dataframe, should have atleast one set type of column.
+    let assemblyFormat = [{
+        `(` $in`:`type($in)`)` attr-dict `:` type($out) 
+    }];
+}
 
 #endif // PANDAS_OPS
