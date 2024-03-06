@@ -17,6 +17,8 @@ namespace mlir {
 namespace pandas {
 
 std::unique_ptr<Pass> createLowerPass();
+std::unique_ptr<mlir::Pass> createLowerToLLVMPass();
+
 } // namespace pandas
 } // namespace mlir
 

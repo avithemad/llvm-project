@@ -31,7 +31,8 @@ def Pandas_CustomType : Pandas_Type<"Custom", "custom"> {
 def Pandas_SeriesType : Pandas_Type<"Series", "series"> {
   let summary = "Pandas dataframe type to hold a dataframe";
 
-  let parameters = (ins "std::string":$column, StringRefParameter<"series value">:$type);
+  let parameters = (ins "std::string":$column, 
+            "mlir::Type":$type);
 
   let assemblyFormat = "`<` $column `:` $type `>`";
 }
