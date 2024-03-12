@@ -50,18 +50,6 @@ def Pandas_ReadCsvOp : Pandas_Op<"read_csv"> {
     ];
 }
 
-// Add new columns to the data frame 
-def Pandas_AddColumnsOp : Pandas_Op<"add_columns"> {
-    let summary = "Operation to add new columns to the dataframe";
-
-    let arguments = (ins Pandas_DataframeType:$df_in, ArrayAttr:$columns);
-    let results = (outs Pandas_DataframeType:$df_out);
-
-    let assemblyFormat = [{
-        `(` $df_in `:` type($df_in) `,` $columns `)` attr-dict `:` type($df_out)
-    }];
-}
-
 // Construct new dataframe from subset of columns
 def Pandas_SelectOp : Pandas_Op<"select"> {
     let summary = "Operation to select columns from a dataframe";
@@ -73,8 +61,20 @@ def Pandas_SelectOp : Pandas_Op<"select"> {
     }];
 }
 
+// Add new columns to the data frame 
+def Pandas_AddColumnOp : Pandas_Op<"add_column"> {
+    let summary = "Operation to add new column to the dataframe";
+
+    let arguments = (ins Pandas_DataframeType:$df_in, Pandas_SeriesType:$column, StrAttr:$column_name);
+    let results = (outs Pandas_DataframeType:$df_out);
+
+    let assemblyFormat = [{
+        `(` $df_in `:` type($df_in) `,` $column `:` type($column) `,` $column_name `)` attr-dict `:` type($df_out)
+    }];
+}
+
 // Access column 
-def Pandas_IndexOp : Pandas_Op<"index"> {
+def Pandas_GetColumnOp : Pandas_Op<"get_column"> {
     let summary = "Operation to select columns from a dataframe";
 
     let arguments = (ins Pandas_DataframeType:$df_in, StrAttr:$column);
@@ -95,34 +95,80 @@ def Pandas_SortbyOp : Pandas_Op<"sortby"> {
     }];
 }
 
+def Pandas_ConstIntOp : Pandas_Op<"const_int"> {
+    let arguments = (ins APIntAttr:$in);
+    let results = (outs Pandas_SeriesType:$out);
+    let assemblyFormat = [{
+        `(` $in `)` attr-dict `:` type($out)
+    }];
+}
+
+def Pandas_ConstFloatOp : Pandas_Op<"const_float"> {
+    let arguments = (ins F64Attr:$in);
+    let results = (outs Pandas_SeriesType:$out);
+    let assemblyFormat = [{
+        `(` $in `)` attr-dict `:` type($out)
+    }];
+}
 
 // Row wise operations add, sub, div, multiply 
-def Pandas_RowwiseAddOp : Pandas_Op<"add"> {
+def Pandas_RowAddOp : Pandas_Op<"add"> {
     let arguments = (ins Pandas_SeriesType:$op1, Pandas_SeriesType:$op2);
     let results = (outs Pandas_SeriesType:$out);
     let assemblyFormat = [{
         `(` $op1`:`type($op1) `,` $op2`:`type($op2) `)` attr-dict `:` type($out) 
     }];
 }
-// join, input is 2 dataframe, and output is equijoined dataframe 
-def Pandas_JoinOp : Pandas_Op<"join"> {
-    let arguments = (ins Pandas_DataframeType:$op1, Pandas_DataframeType:$op2);
-    let results = (outs Pandas_DataframeType:$out);
+def Pandas_RowSubOp : Pandas_Op<"sub"> {
+    let arguments = (ins Pandas_SeriesType:$op1, Pandas_SeriesType:$op2);
+    let results = (outs Pandas_SeriesType:$out);
+    let assemblyFormat = [{
+        `(` $op1`:`type($op1) `,` $op2`:`type($op2) `)` attr-dict `:` type($out) 
+    }];
+}
+def Pandas_RowDivOp : Pandas_Op<"divide"> {
+    let arguments = (ins Pandas_SeriesType:$op1, Pandas_SeriesType:$op2);
+    let results = (outs Pandas_SeriesType:$out);
+    let assemblyFormat = [{
+        `(` $op1`:`type($op1) `,` $op2`:`type($op2) `)` attr-dict `:` type($out) 
+    }];
+}
+def Pandas_RowMulOp : Pandas_Op<"multiply"> {
+    let arguments = (ins Pandas_SeriesType:$op1, Pandas_SeriesType:$op2);
+    let results = (outs Pandas_SeriesType:$out);
     let assemblyFormat = [{
         `(` $op1`:`type($op1) `,` $op2`:`type($op2) `)` attr-dict `:` type($out) 
     }];
 }
 
 
-// Filtering with a predicate like a where clause 
-def Pandas_FilterOp : Pandas_Op<"where"> {
+// join, input is 2 dataframe, and output is equijoined dataframe 
+def Pandas_JoinOp : Pandas_Op<"join"> {
+    let arguments = (ins Pandas_DataframeType:$op1, Pandas_DataframeType:$op2, StrAttr:$left_on, StrAttr:$right_on);
+    let results = (outs Pandas_DataframeType:$out);
+    let assemblyFormat = [{
+        `(` $op1`:`type($op1) `,` $op2`:`type($op2) `,` $left_on `,` $right_on `)` attr-dict `:` type($out) 
+    }];
+}
+
+// Filtering with a predicate like a where clause, return the boolean index to actually perform the reduction
+def Pandas_FilterOp : Pandas_Op<"filter"> {
     let arguments = (ins Pandas_DataframeType:$df, 
                         Arith_CmpFPredicateAttr:$predicate,
                         StrAttr:$column,
                         StrAttr:$value);
-    let results = (outs Pandas_DataframeType:$out);
+    let results = (outs Pandas_SeriesType:$out);
     let assemblyFormat = [{
         `(`$df `:` type($df)`,` $column $predicate $value`)` attr-dict `:` type($out)
+    }];
+}
+
+def Pandas_FilterReduceOp : Pandas_Op<"filter_reduce"> {
+    let arguments = (ins Pandas_DataframeType:$df, Pandas_SeriesType:$filter);
+    let results = (outs Pandas_DataframeType:$df_out);
+
+    let assemblyFormat = [{
+        `(`$df `:` type($df)`,` $filter `:` type($filter)`)` attr-dict `:` type($df_out)
     }];
 }
 
@@ -141,30 +187,38 @@ def Pandas_GroupbyOp : Pandas_Op<"groupby"> {
 
 // standalone reductions (sum, mean, count)
 def Pandas_AggsumOp : Pandas_Op<"agg_sum"> {
-    let arguments = (ins AnyTypeOf<[Pandas_DataframeType, Pandas_SeriesType]>:$in);
+    let arguments = (ins AnyTypeOf<[Pandas_DataframeType, Pandas_SeriesType]>:$in, ArrayAttr:$columns);
     let results = (outs AnyTypeOf<[Pandas_DataframeType, Pandas_SeriesType]>:$out);
     // TODO: add verification to see if input and output is of same type.
     // Also if it is dataframe, should have atleast one set type of column.
     let assemblyFormat = [{
-        `(` $in`:`type($in)`)` attr-dict `:` type($out) 
+        `(` $in`:`type($in) `,` $columns `)` attr-dict `:` type($out) 
     }];
 }
 def Pandas_AggmeanOp : Pandas_Op<"agg_mean"> {
-    let arguments = (ins AnyTypeOf<[Pandas_DataframeType, Pandas_SeriesType]>:$in);
+    let arguments = (ins AnyTypeOf<[Pandas_DataframeType, Pandas_SeriesType]>:$in, ArrayAttr:$columns);
     let results = (outs AnyTypeOf<[Pandas_DataframeType, Pandas_SeriesType]>:$out);
     // TODO: add verification to see if input and output is of same type.
     // Also if it is dataframe, should have atleast one set type of column.
     let assemblyFormat = [{
-        `(` $in`:`type($in)`)` attr-dict `:` type($out) 
+        `(` $in`:`type($in) `,` $columns`)` attr-dict `:` type($out) 
     }];
 }
 def Pandas_AggcountOp : Pandas_Op<"agg_count"> {
-    let arguments = (ins AnyTypeOf<[Pandas_DataframeType, Pandas_SeriesType]>:$in);
+    let arguments = (ins AnyTypeOf<[Pandas_DataframeType, Pandas_SeriesType]>:$in, ArrayAttr:$columns);
     let results = (outs AnyTypeOf<[Pandas_DataframeType, Pandas_SeriesType]>:$out);
     // TODO: add verification to see if input and output is of same type.
     // Also if it is dataframe, should have atleast one set type of column.
     let assemblyFormat = [{
-        `(` $in`:`type($in)`)` attr-dict `:` type($out) 
+        `(` $in`:`type($in) `,` $columns`)` attr-dict `:` type($out) 
+    }];
+}
+
+def Pandas_PrintOp : Pandas_Op<"print"> {
+    let arguments = (ins AnyTypeOf<[Pandas_DataframeType, Pandas_SeriesType]>:$in);
+
+    let assemblyFormat = [{
+        `(`$in `:` type($in)`)` attr-dict
     }];
 }
 

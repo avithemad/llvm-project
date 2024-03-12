@@ -47,29 +47,31 @@ struct SelectOpLowering : public OpRewritePattern<pandas::SelectOp> {
   }
 };
 
-struct ReadCsvOpLowering : public OpRewritePattern<pandas::ReadCsvOp> {
-  using OpRewritePattern<pandas::ReadCsvOp>::OpRewritePattern;
+struct ReadCsvOpLowering : public OpConversionPattern<pandas::ReadCsvOp> {
+  using OpConversionPattern<pandas::ReadCsvOp>::OpConversionPattern;
 
-  LogicalResult matchAndRewrite(pandas::ReadCsvOp op, 
-    PatternRewriter &rewriter) const final {
-      Location loc = op.getLoc();
-
-      auto alloc = rewriter.create<arith::ConstantIndexOp>(loc, 0);
-
-      rewriter.replaceOp(op, alloc);
-      return success();
+  LogicalResult matchAndRewrite(pandas::ReadCsvOp op, OpAdaptor adaptor,
+    ConversionPatternRewriter &rewriter) const final {
+    rewriter.updateRootInPlace(op,
+                               [&] { op->setOperands(adaptor.getOperands()); });
+    return success();
   }
 };
 
 void PandasLoweringPass::runOnOperation() {
   ConversionTarget target(getContext());
 
-  target.addLegalDialect<memref::MemRefDialect, arith::ArithDialect>();
+  target.addLegalDialect<memref::MemRefDialect, BuiltinDialect,
+  arith::ArithDialect>();
 
   target.addIllegalDialect<pandas::PandasDialect>();
+  target.addDynamicallyLegalOp<pandas::ReadCsvOp>([](pandas::ReadCsvOp op) {
+    return llvm::none_of(op->getOperandTypes(),
+                         [](Type type) { return type.isa<TensorType>(); });
+  });
 
   RewritePatternSet patterns(&getContext());
-  patterns.add<SelectOpLowering, ReadCsvOpLowering>(&getContext());
+  patterns.add<SelectOpLowering,ReadCsvOpLowering>(&getContext());
 
   if (failed(applyPartialConversion(getOperation(), target, std::move(patterns))))
     signalPassFailure();

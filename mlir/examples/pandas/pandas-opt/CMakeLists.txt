@@ -6,14 +6,22 @@ set(LIBS
         ${conversion_libs}
         ${extension_libs}
         MLIRAnalysis
+        MLIRBuiltinToLLVMIRTranslation
         MLIRCallInterfaces
         MLIRCastInterfaces
+        MLIRExecutionEngine
         MLIRIR
+        MLIRLLVMCommonConversion
+        MLIRLLVMDialect
+        MLIRLLVMToLLVMIRTranslation
+        MLIRMemRefDialect
         MLIRParser
         MLIRPass
         MLIRSideEffectInterfaces
         MLIRSupport
-        MLIRTransforms)
+        MLIRTargetLLVMIRExport
+        MLIRTransforms
+)
 
 add_llvm_executable(pandas-opt pandas-opt.cpp)
 

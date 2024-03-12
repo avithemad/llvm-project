@@ -3,6 +3,7 @@ add_mlir_dialect_library(MLIRPandas
         PandasDialect.cpp
         PandasOps.cpp
         PandasPasses.cpp
+        LLVMLoweringPass.cpp
 
         ADDITIONAL_HEADER_DIRS
         ${PROJECT_SOURCE_DIR}/include/Pandas

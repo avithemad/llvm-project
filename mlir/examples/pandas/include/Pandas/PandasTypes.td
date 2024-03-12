@@ -31,9 +31,24 @@ def Pandas_CustomType : Pandas_Type<"Custom", "custom"> {
 def Pandas_SeriesType : Pandas_Type<"Series", "series"> {
   let summary = "Pandas dataframe type to hold a dataframe";
 
-  let parameters = (ins "std::string":$column, StringRefParameter<"series value">:$type);
+  // TODO: check how to restrict the types to pandas string, pandas datetime, integer and float
+  let parameters = (ins "std::string":$column, "mlir::Type":$type);
 
   let assemblyFormat = "`<` $column `:` $type `>`";
+}
+
+def Pandas_String : Pandas_Type<"String", "string"> {
+  let summary = "String type for the pandas";
+}
+
+def Pandas_Datetime : Pandas_Type<"Datetime", "datetime"> {
+  let summary = "Datetime type for the pandas";
+}
+
+def Pandas_Group : Pandas_Type<"Group", "group"> {
+  // TODO: check how to restrict the types to pandas string, pandas datetime, integer and float
+  let parameters = (ins "mlir::Type":$type);
+  let assemblyFormat = "`<` $type `>`";
 }
 
 def Pandas_DataframeType : Pandas_Type<"Dataframe", "df"> {
