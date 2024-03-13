@@ -172,6 +172,14 @@ def Pandas_FilterReduceOp : Pandas_Op<"filter_reduce"> {
     }];
 }
 
+def Pandas_FilterRangeOp: Pandas_Op<"filter_range"> {
+    let arguments = (ins Pandas_DataframeType:$df, I32Attr:$low, I32Attr:$high);
+    let results = (outs Pandas_DataframeType:$df_out);
+
+    let assemblyFormat = [{
+        $df `:` type($df) `[`$low `:` $high `]` attr-dict type($df_out)
+    }];
+}
 
 
 // Group by, single/multiple columns along with reductions(sum mean count)
