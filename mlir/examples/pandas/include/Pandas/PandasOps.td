@@ -144,7 +144,8 @@ def Pandas_RowMulOp : Pandas_Op<"multiply"> {
 
 // join, input is 2 dataframe, and output is equijoined dataframe 
 def Pandas_JoinOp : Pandas_Op<"join"> {
-    let arguments = (ins Pandas_DataframeType:$op1, Pandas_DataframeType:$op2, StrAttr:$left_on, StrAttr:$right_on);
+    let arguments = (ins Pandas_DataframeType:$op1, Pandas_DataframeType:$op2, 
+    ArrayAttr:$left_on, ArrayAttr:$right_on);
     let results = (outs Pandas_DataframeType:$out);
     let assemblyFormat = [{
         `(` $op1`:`type($op1) `,` $op2`:`type($op2) `,` $left_on `,` $right_on `)` attr-dict `:` type($out) 

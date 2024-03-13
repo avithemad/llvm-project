@@ -248,7 +248,7 @@ module {
                     <"l_shipdate":!pandas.group<!pandas.datetime>>, 
                     <"l_orderkey":!pandas.group<i32>>, <"sum_qty": i32>, 
                     <"sum_base_price": f64>, <"avg_qty": i32>,
-                    <"avg_price": f64>, , <"sum_disc_price": f64>,
+                    <"avg_price": f64> , <"sum_disc_price": f64>,
                     <"sum_charge": f64>, <"avg_disc": f64>,
                     <"count_order": !pandas.group<i32>>>
 
@@ -259,7 +259,7 @@ module {
                     <"l_shipdate":!pandas.group<!pandas.datetime>>, 
                     <"l_orderkey":!pandas.group<i32>>, <"sum_qty": i32>, 
                     <"sum_base_price": f64>, <"avg_qty": i32>,
-                    <"avg_price": f64>, , <"sum_disc_price": f64>,
+                    <"avg_price": f64>, <"sum_disc_price": f64>,
                     <"sum_charge": f64>, <"avg_disc": f64>,
                     <"count_order": !pandas.group<i32>>>, ["count_order"]) : !pandas.df<<"l_quantity": !pandas.group<i32>>,
                     <"l_extendedprice":!pandas.group<f64>>, <"l_discount":!pandas.group<f64>>, 
@@ -268,18 +268,18 @@ module {
                     <"l_shipdate":!pandas.group<!pandas.datetime>>, 
                     <"l_orderkey":!pandas.group<i32>>, <"sum_qty": i32>, 
                     <"sum_base_price": f64>, <"avg_qty": i32>,
-                    <"avg_price": f64>, , <"sum_disc_price": f64>,
+                    <"avg_price": f64> , <"sum_disc_price": f64>,
                     <"sum_charge": f64>, <"avg_disc": f64>,
                     <"count_order": i32>>
 
-        %sort1 = pandas.sortby(%final: !!pandas.df<<"l_quantity": !pandas.group<i32>>,
+        %sort1 = pandas.sortby(%final: !pandas.df<<"l_quantity": !pandas.group<i32>>,
                     <"l_extendedprice":!pandas.group<f64>>, <"l_discount":!pandas.group<f64>>, 
                     <"l_tax":!pandas.group<f64>>,
                     <"l_returnflag":!pandas.string>, <"l_linestatus":!pandas.string>, 
                     <"l_shipdate":!pandas.group<!pandas.datetime>>, 
                     <"l_orderkey":!pandas.group<i32>>, <"sum_qty": i32>, 
                     <"sum_base_price": f64>, <"avg_qty": i32>,
-                    <"avg_price": f64>, , <"sum_disc_price": f64>,
+                    <"avg_price": f64>, <"sum_disc_price": f64>,
                     <"sum_charge": f64>, <"avg_disc": f64>,
                     <"count_order": i32>>, "l_returnflag") : !pandas.df<<"l_quantity": !pandas.group<i32>>,
                     <"l_extendedprice":!pandas.group<f64>>, <"l_discount":!pandas.group<f64>>, 
@@ -288,7 +288,7 @@ module {
                     <"l_shipdate":!pandas.group<!pandas.datetime>>, 
                     <"l_orderkey":!pandas.group<i32>>, <"sum_qty": i32>, 
                     <"sum_base_price": f64>, <"avg_qty": i32>,
-                    <"avg_price": f64>, , <"sum_disc_price": f64>,
+                    <"avg_price": f64>, <"sum_disc_price": f64>,
                     <"sum_charge": f64>, <"avg_disc": f64>,
                     <"count_order": i32>>
 
@@ -299,7 +299,7 @@ module {
                     <"l_shipdate":!pandas.group<!pandas.datetime>>, 
                     <"l_orderkey":!pandas.group<i32>>, <"sum_qty": i32>, 
                     <"sum_base_price": f64>, <"avg_qty": i32>,
-                    <"avg_price": f64>, , <"sum_disc_price": f64>,
+                    <"avg_price": f64>, <"sum_disc_price": f64>,
                     <"sum_charge": f64>, <"avg_disc": f64>,
                     <"count_order": i32>>, "l_linestatus") : !pandas.df<<"l_quantity": !pandas.group<i32>>,
                     <"l_extendedprice":!pandas.group<f64>>, <"l_discount":!pandas.group<f64>>, 
@@ -308,7 +308,7 @@ module {
                     <"l_shipdate":!pandas.group<!pandas.datetime>>, 
                     <"l_orderkey":!pandas.group<i32>>, <"sum_qty": i32>, 
                     <"sum_base_price": f64>, <"avg_qty": i32>,
-                    <"avg_price": f64>, , <"sum_disc_price": f64>,
+                    <"avg_price": f64>, <"sum_disc_price": f64>,
                     <"sum_charge": f64>, <"avg_disc": f64>,
                     <"count_order": i32>>
 
@@ -319,7 +319,9 @@ module {
                     <"l_shipdate":!pandas.group<!pandas.datetime>>, 
                     <"l_orderkey":!pandas.group<i32>>, <"sum_qty": i32>, 
                     <"sum_base_price": f64>, <"avg_qty": i32>,
-                    <"avg_price": f64>>)
+                    <"avg_price": f64>, <"sum_disc_price": f64>,
+                    <"sum_charge": f64>, <"avg_disc": f64>,
+                    <"count_order": i32>>)
 
         return
     }

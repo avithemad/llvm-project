@@ -77,7 +77,7 @@ module {
         %jn1 = pandas.join(%forders: !pandas.df<<"o_orderkey": i32>,<"o_custkey": i32>,
             <"o_orderdate": !pandas.datetime>, <"o_shippriority": i32>>,
             %fcustomer: !pandas.df<<"c_custkey" : i32>, <"c_mktsegment" : !pandas.string>>, 
-            "o_custkey", "c_custkey") : 
+            ["o_custkey"], ["c_custkey"]) : 
             !pandas.df<<"o_orderkey": i32>,<"o_custkey": i32>,
             <"o_orderdate": !pandas.datetime>, <"o_shippriority": i32>, 
             <"c_mktsegment" : !pandas.string>>
@@ -87,7 +87,7 @@ module {
             <"c_mktsegment" : !pandas.string>>,
             %flineitem: !pandas.df<<"l_orderkey":i32>, <"l_extendedprice":f64>, 
             <"l_discount":f64>, <"l_shipdate":!pandas.datetime>>,
-            "o_orderkey", "l_orderkey") :
+            ["o_orderkey"], ["l_orderkey"]) :
             !pandas.df<<"l_orderkey": i32>,<"o_custkey": i32>,
             <"o_orderdate": !pandas.datetime>, <"o_shippriority": i32>, 
             <"c_mktsegment" : !pandas.string>, <"l_extendedprice":f64>, 
