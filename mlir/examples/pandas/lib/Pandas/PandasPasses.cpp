@@ -68,6 +68,13 @@ void PandasLoweringPass::runOnOperation() {
   target.addDynamicallyLegalOp<pandas::ReadCsvOp>([](pandas::ReadCsvOp op) {
     return llvm::none_of(op->getOperandTypes(),
                          [](Type type) { return type.isa<TensorType>(); });
+
+  });
+
+  target.addDynamicallyLegalOp<pandas::PrintOp>([](pandas::PrintOp op) {
+    return llvm::none_of(op->getOperandTypes(),
+                         [](Type type) { return type.isa<TensorType>(); });
+
   });
 
   RewritePatternSet patterns(&getContext());

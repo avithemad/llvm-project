@@ -23,70 +23,46 @@
 using namespace mlir;
 
 namespace {
-class ReadCsvOpLowering : public ConversionPattern {
+
+class PrintOpLowering : public ConversionPattern {
 public:
-  explicit ReadCsvOpLowering(MLIRContext *context)
-      : ConversionPattern(pandas::ReadCsvOp::getOperationName(), 1, context) {}
+  explicit PrintOpLowering(MLIRContext *context)
+      : ConversionPattern(pandas::PrintOp::getOperationName(), 1, context) {}
 
   LogicalResult
   matchAndRewrite(Operation *op, ArrayRef<Value> operands,
                   ConversionPatternRewriter &rewriter) const override {
-    std::cout << "Number of operands = " << operands.size() << "\n";
-    std::string s;
-    llvm::raw_string_ostream out(s);
-    op->getAttrs().front().getValue().print(out);
-    std::string filename;
-    for (auto c: s) {
-      if (c!='\"') filename+=c;
-    }
-    // Generate a call to printf for the current element of the loop.
     ModuleOp parentModule = op->getParentOfType<ModuleOp>();
     auto loc = op->getLoc();
+    pandas::DataframeType resultType = (*(op->result_type_begin())).getImpl();
+    llvm::ArrayRef<pandas::SeriesType> columns = resultType.getColumns();
+
     auto printfRef = getOrInsertPrintf(rewriter, parentModule);
-    auto scanfRef = getOrInsertScanf(rewriter, parentModule);
-    auto fscanfRef = getOrInsertFscanf(rewriter, parentModule);
-    auto fopenRef = getOrInsertFopen(rewriter, parentModule);
-    std::string mode = "r";
-    Value filenameConst = getOrCreateGlobalString(
-        loc, rewriter, "filename", StringRef(filename), parentModule);
-    Value modeConst = getOrCreateGlobalString(
-        loc, rewriter, "mode", StringRef(mode), parentModule);
-    Value newlineConst = getOrCreateGlobalString(
-        loc, rewriter, "newline", StringRef("\n"), parentModule);
-    Value scanformatConst = getOrCreateGlobalString(
-        loc, rewriter, "scanformat", StringRef("%d"), parentModule);
-    // Notify the rewriter that this operation has been removed.
+    std::string columnnames = "";
 
+    for (auto i = columns.begin(); i < columns.end(); i++) {
+      columnnames += (*i).getColumn();
+      columnnames += "\t";
+    }
+    columnnames += "\n";
+    Value columnNameConst = getOrCreateGlobalString(
+        loc, rewriter, columnnames, StringRef(columnnames), parentModule);
     rewriter.create<func::CallOp>(loc, printfRef, rewriter.getIntegerType(32),
-                                  filenameConst);
-    rewriter.create<func::CallOp>(loc, printfRef, rewriter.getIntegerType(32),
-                                  newlineConst);
-
-    Value fl = rewriter.create<LLVM::CallOp>(loc, 
-                                  LLVM::LLVMPointerType::get(parentModule.getContext()),
-                                  fopenRef,
-                                  ArrayRef<Value>({filenameConst, modeConst})).getResult();
-    Value cst0 = rewriter.create<LLVM::ConstantOp>(loc, rewriter.getI64Type(),
-                                                  rewriter.getIndexAttr(0));
-    rewriter.create<func::CallOp>(loc, fscanfRef, 
-                                  LLVM::LLVMPointerType::get(IntegerType::get(parentModule.getContext(), 8)),
-                                  ArrayRef<Value>({fl, scanformatConst, cst0}));
-
-    rewriter.create<func::CallOp>(loc, printfRef, rewriter.getIntegerType(32),
-                                  modeConst);
-    rewriter.create<func::CallOp>(loc, printfRef, rewriter.getIntegerType(32),
-                                  newlineConst);
-
-    // kept for not exiting for now
-    rewriter.create<func::CallOp>(loc, scanfRef, rewriter.getIntegerType(32),
-                                  filenameConst);
+                                  columnNameConst);
+    // for (auto opr = operands.begin(); opr<operands.end(); opr++) {
+    //   std::cout << "Now dumping the print operands";
+    //   Value o = *opr;
+    //   rewriter.create<LLVM::LoadOp>(
+    //         loc,
+    //         LLVM::LLVMPointerType::get(IntegerType::get(parentModule.getContext(),
+    //         32)), o);
+    //   o.dump();
+    // }
     rewriter.eraseOp(op);
     return success();
   }
 
 private:
-  /// Return a symbol reference to the printf function, inserting it into the
-  /// module if necessary.
   static FlatSymbolRefAttr getOrInsertPrintf(PatternRewriter &rewriter,
                                              ModuleOp module) {
     auto *context = module.getContext();
@@ -106,7 +82,165 @@ private:
     rewriter.create<LLVM::LLVMFuncOp>(module.getLoc(), "printf", llvmFnType);
     return SymbolRefAttr::get(context, "printf");
   }
+  static Value getOrCreateGlobalString(Location loc, OpBuilder &builder,
+                                       StringRef name, StringRef value,
+                                       ModuleOp module) {
+    // Create the global at the entry of the module.
+    LLVM::GlobalOp global;
+    if (!(global = module.lookupSymbol<LLVM::GlobalOp>(name))) {
+      OpBuilder::InsertionGuard insertGuard(builder);
+      builder.setInsertionPointToStart(module.getBody());
+      auto type = LLVM::LLVMArrayType::get(
+          IntegerType::get(builder.getContext(), 8), value.size());
+      global = builder.create<LLVM::GlobalOp>(loc, type, /*isConstant=*/true,
+                                              LLVM::Linkage::Internal, name,
+                                              builder.getStringAttr(value),
+                                              /*alignment=*/0);
+    }
 
+    // Get the pointer to the first character in the global string.
+    Value globalPtr = builder.create<LLVM::AddressOfOp>(loc, global);
+    Value cst0 = builder.create<LLVM::ConstantOp>(loc, builder.getI64Type(),
+                                                  builder.getIndexAttr(0));
+    return builder.create<LLVM::GEPOp>(
+        loc,
+        LLVM::LLVMPointerType::get(IntegerType::get(builder.getContext(), 8)),
+        globalPtr, ArrayRef<Value>({cst0, cst0}));
+  }
+};
+
+class ReadCsvOpLowering : public ConversionPattern {
+public:
+  explicit ReadCsvOpLowering(MLIRContext *context)
+      : ConversionPattern(pandas::ReadCsvOp::getOperationName(), 1, context) {}
+
+  LogicalResult
+  matchAndRewrite(Operation *op, ArrayRef<Value> operands,
+                  ConversionPatternRewriter &rewriter) const override {
+    std::string s;
+    llvm::raw_string_ostream out(s);
+    op->getAttrs().front().getValue().print(out);
+    std::string filename;
+    for (auto c : s) {
+      if (c != '\"')
+        filename += c;
+    }
+
+    pandas::DataframeType resultType = (*(op->result_type_begin())).getImpl();
+    llvm::ArrayRef<pandas::SeriesType> columns = resultType.getColumns();
+
+    // Step 1: Initialization
+    // Create a n size void * array (i8*), this will be the return handle
+    // for each type generate a new dynamic array
+    // assign the pointer to the void * array
+    auto loc = op->getLoc();
+    ModuleOp parentModule = op->getParentOfType<ModuleOp>();
+    int numberOfColumns = columns.size();
+    Type rType = LLVM::LLVMPointerType::get(
+        IntegerType::get(parentModule.getContext(), 8));
+    Value cols_const = rewriter.create<LLVM::ConstantOp>(
+        loc, rewriter.getI64Type(), numberOfColumns);
+    Value dataframe_handle =
+        rewriter.create<LLVM::AllocaOp>(loc, rType, cols_const);
+    Value one =
+        rewriter.create<LLVM::ConstantOp>(loc, rewriter.getI64Type(), 1);
+    Type i32Type = IntegerType::get(parentModule.getContext(), 32);
+    Type i8Type = IntegerType::get(parentModule.getContext(), 8);
+    Value cst0 = rewriter.create<LLVM::ConstantOp>(loc, rewriter.getI64Type(),
+                                                   rewriter.getIndexAttr(0));
+    // now generate code for each of the element type
+    int k = 0;
+    for (auto i = columns.begin(); i < columns.end(); i++) {
+      pandas::SeriesType column = *i;
+      std::string c_name = column.getColumn();
+      mlir::Type c_type = column.getType();
+      std::string c_typename;
+      llvm::raw_string_ostream out_1(c_typename);
+      c_type.print(out_1);
+      std::cout << c_name << " Type name: -> " << c_typename << '\n';
+      Value csti =
+          rewriter.create<LLVM::ConstantOp>(loc, rewriter.getI64Type(), k++);
+      if (c_type.isInteger(32)) {
+        Type rType1 = LLVM::LLVMPointerType::get(i32Type);
+        Value addr = rewriter.create<LLVM::AllocaOp>(loc, rType1, one);
+        // get address of the array TODO: check how adress is loaded actually
+        // and not the value
+        Value loaded = rewriter.create<LLVM::LoadOp>(
+            loc, LLVM::LLVMPointerType::get(i32Type), addr);
+        Value castedAddress = rewriter.create<LLVM::BitcastOp>(
+            loc, LLVM::LLVMPointerType::get(i8Type), loaded);
+        Value df_adress = rewriter.create<LLVM::GEPOp>(
+            loc,
+            LLVM::LLVMPointerType::get(
+                IntegerType::get(rewriter.getContext(), 8)),
+            dataframe_handle, ArrayRef<Value>({csti}));
+        rewriter.create<LLVM::StoreOp>(loc, castedAddress, df_adress);
+
+        // Add all these differently whenever a MVP of read and print is done
+      } else if (c_type.isF64()) {
+        Type rType1 = LLVM::LLVMPointerType::get(
+            FloatType::getF64(parentModule.getContext()));
+        Value addr = rewriter.create<LLVM::AllocaOp>(loc, rType1, one);
+      } else if (c_typename == "!pandas.string" ||
+                 c_typename == "!pandas.datetime") {
+        Type rType1 = LLVM::LLVMPointerType::get(LLVM::LLVMPointerType::get(
+            IntegerType::get(parentModule.getContext(), 8)));
+        rewriter.create<LLVM::AllocaOp>(loc, rType1, one);
+      }
+    }
+    
+    // Step 2: Gen code for parsing
+    // then generate the code to parse the csv file
+    // First pass, get the number of lines
+    // Allocate so much memory for each of the type
+    // Go through the file and assign each element
+
+    // Generate a call to printf for the current element of the loop.
+    // auto printfRef = getOrInsertPrintf(rewriter, parentModule);
+    // auto scanfRef = getOrInsertScanf(rewriter, parentModule);
+    // auto fscanfRef = getOrInsertFscanf(rewriter, parentModule);
+    // auto fopenRef = getOrInsertFopen(rewriter, parentModule);
+    // std::string mode = "r";
+    // Value filenameConst = getOrCreateGlobalString(
+    //     loc, rewriter, "filename", StringRef(filename), parentModule);
+    // Value modeConst = getOrCreateGlobalString(loc, rewriter, "mode",
+    //                                           StringRef(mode), parentModule);
+    // Value newlineConst = getOrCreateGlobalString(loc, rewriter, "newline",
+    //                                              StringRef("\n"),
+    //                                              parentModule);
+    // Value scanformatConst = getOrCreateGlobalString(
+    //     loc, rewriter, "scanformat", StringRef("%d"), parentModule);
+    // // Notify the rewriter that this operation has been removed.
+
+    // Value fl =
+    //     rewriter
+    //         .create<LLVM::CallOp>(
+    //             loc, LLVM::LLVMPointerType::get(parentModule.getContext()),
+    //             fopenRef, ArrayRef<Value>({filenameConst, modeConst}))
+    //         .getResult();
+    // Value cst0 =
+    //     rewriter.create<LLVM::ConstantOp>(loc, rewriter.getI64Type(), 32);
+    // rewriter.create<func::CallOp>(loc, fscanfRef,
+    //                               LLVM::LLVMPointerType::get(IntegerType::get(
+    //                                   parentModule.getContext(), 8)),
+    //                               ArrayRef<Value>({fl, scanformatConst,
+    //                               cst0}));
+
+    // rewriter.create<func::CallOp>(loc, printfRef,
+    // rewriter.getIntegerType(32),
+    //                               modeConst);
+    // rewriter.create<func::CallOp>(loc, printfRef,
+    // rewriter.getIntegerType(32),
+    //                               newlineConst);
+
+    // // kept for not exiting for now
+    // rewriter.create<func::CallOp>(loc, scanfRef, rewriter.getIntegerType(32),
+    //                               filenameConst);
+    rewriter.replaceOp(op, dataframe_handle);
+    return success();
+  }
+
+private:
   static FlatSymbolRefAttr getOrInsertScanf(PatternRewriter &rewriter,
                                             ModuleOp module) {
     auto *context = module.getContext();
@@ -152,11 +286,11 @@ private:
   }
 
   static FlatSymbolRefAttr getOrInsertFscanf(PatternRewriter &rewriter,
-                                               ModuleOp module) {
+                                             ModuleOp module) {
     auto *context = module.getContext();
     if (module.lookupSymbol<LLVM::LLVMFuncOp>("fscanf"))
       return SymbolRefAttr::get(context, "fscanf");
-    
+
     // define the types required
     auto llvmI8PtrTy = LLVM::LLVMPointerType::get(IntegerType::get(context, 8));
     auto llvmOpaquePtrTy = LLVM::LLVMPointerType::get(context);
@@ -167,12 +301,10 @@ private:
     auto llvmFnType = LLVM::LLVMFunctionType::get(llvmI8PtrTy, args_ar,
                                                   /*isVarArg=*/true);
 
-
     PatternRewriter::InsertionGuard insertGuard(rewriter);
     rewriter.setInsertionPointToStart(module.getBody());
     rewriter.create<LLVM::LLVMFuncOp>(module.getLoc(), "fscanf", llvmFnType);
     return SymbolRefAttr::get(context, "fscanf");
-
   }
   /// Return a value representing an access into a global string with the given
   /// name, creating the string if necessary.
@@ -233,6 +365,7 @@ void PandasToLLVMLoweringPass::runOnOperation() {
   populateFuncToLLVMConversionPatterns(typeConverter, patterns);
 
   patterns.add<ReadCsvOpLowering>(&getContext());
+  patterns.add<PrintOpLowering>(&getContext());
 
   auto module = getOperation();
   if (failed(applyFullConversion(module, target, std::move(patterns))))

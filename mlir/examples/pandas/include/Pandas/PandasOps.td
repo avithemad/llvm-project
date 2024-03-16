@@ -225,9 +225,9 @@ def Pandas_AggcountOp : Pandas_Op<"agg_count"> {
 
 def Pandas_PrintOp : Pandas_Op<"print"> {
     let arguments = (ins AnyTypeOf<[Pandas_DataframeType, Pandas_SeriesType]>:$in);
-
+    let results = (outs AnyTypeOf<[Pandas_DataframeType, Pandas_SeriesType]>:$out);
     let assemblyFormat = [{
-        `(`$in `:` type($in)`)` attr-dict
+        `(`$in `:` type($in)`)` attr-dict `:` type($out)
     }];
 }
 
