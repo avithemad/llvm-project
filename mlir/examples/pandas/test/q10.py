@@ -10,7 +10,6 @@ Q_NUM = 10
 def q():
     date1 = datetime(1994, 1, 1)
     date2 = datetime(1995, 4, 1)
-    var3 = 24
 
     customer_ds = utils.get_customer_ds
     orders_ds = utils.get_orders_ds
