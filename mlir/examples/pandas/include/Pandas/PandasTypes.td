@@ -28,7 +28,7 @@ def Pandas_CustomType : Pandas_Type<"Custom", "custom"> {
     let assemblyFormat = "`<` $value `>`";
 }
 
-def Pandas_SeriesType : Pandas_Type<"Series", "series"> {
+def Pandas_SeriesType : Pandas_Type<"Series", "ser"> {
   let summary = "Pandas dataframe type to hold a dataframe";
 
   // TODO: check how to restrict the types to pandas string, pandas datetime, integer and float
@@ -65,5 +65,6 @@ def Pandas_DataframeType : Pandas_Type<"Dataframe", "df"> {
         }]>
     ];
 }
+
 
 #endif // PANDAS_TYPES

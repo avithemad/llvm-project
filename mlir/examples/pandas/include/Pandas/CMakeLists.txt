@@ -1,4 +1,4 @@
-add_mlir_dialect(PandasOps pandas)
+add_mlir_dialect(PandasOps pd)
 add_mlir_doc(PandasDialect PandasDialect Pandas/ -gen-dialect-doc)
 add_mlir_doc(PandasOps PandasOps Pandas/ -gen-op-doc)
 

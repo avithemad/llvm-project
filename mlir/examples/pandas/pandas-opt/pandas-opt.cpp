@@ -119,6 +119,8 @@ int dumpMLIR() {
   context.getOrLoadDialect<mlir::func::FuncDialect>();
   context.getOrLoadDialect<mlir::pandas::PandasDialect>();
   context.getOrLoadDialect<mlir::LLVM::LLVMDialect>();
+  context.getOrLoadDialect<mlir::memref::MemRefDialect>();
+  context.getOrLoadDialect<mlir::linalg::LinalgDialect>();
 
   mlir::OwningOpRef<mlir::ModuleOp> module;
 
@@ -190,7 +192,6 @@ int dumpMLIR() {
   return 0;
 }
 int main(int argc, char **argv) {
-  std::cout << std::this_thread::get_id() << "\n";
   mlir::registerAsmPrinterCLOptions();
   mlir::registerMLIRContextCLOptions();
   cl::ParseCommandLineOptions(argc, argv, "pandas compiler\n");

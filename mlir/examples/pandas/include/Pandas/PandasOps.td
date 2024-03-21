@@ -15,6 +15,11 @@ include "mlir/Dialect/Arith/IR/ArithBase.td"
 include "mlir/Interfaces/InferTypeOpInterface.td"
 include "mlir/Interfaces/SideEffectInterfaces.td"
 
+def Pandas_NewdfOp : Pandas_Op<"new_df"> {
+    let arguments = (ins Variadic<Builtin_MemRef>);
+    let results = (outs Variadic<Builtin_MemRef>);
+}
+
 def Pandas_FooOp : Pandas_Op<"foo"> {
     let summary = "Illustrates how to define an operation.";
     let description = [{
@@ -39,10 +44,14 @@ def Pandas_ReadCsvOp : Pandas_Op<"read_csv"> {
     let summary = "Operation to read the csv file to construct the dataframe";
 
     let arguments = (ins StrAttr:$filename);
-    let results = (outs Pandas_DataframeType);
+    let results = (outs Pandas_DataframeType:$res);
 
     let assemblyFormat = [{
-        `(` $filename  `)` attr-dict `:` type(results)
+        `(` $filename  `)` attr-dict `:` type($res)
+    }];
+
+    let extraClassDeclaration = [{
+        void hellothere();
     }];
 
     let builders = [
@@ -58,6 +67,27 @@ def Pandas_SelectOp : Pandas_Op<"select"> {
     let results = (outs Pandas_DataframeType:$df_out);
     let assemblyFormat = [{
         `(` $df_in`:`type($df_in)  `,` $columns `)` attr-dict `:` type($df_out) 
+    }];
+}
+
+def Pandas_ProjectOp : Pandas_Op<"project"> {
+    let summary = "Operation to select columns from a dataframe";
+
+    let arguments = (ins Variadic<Pandas_SeriesType>:$df_in, ArrayAttr:$columns);
+    let results = (outs Variadic<Pandas_SeriesType>:$df_out);
+    let assemblyFormat = [{
+         $df_in `:` type($df_in) $columns  attr-dict `->` type($df_out) 
+    }];
+}
+
+def Pandas_GatherColumnsOp : Pandas_Op<"gather_columns"> {
+    let summary = "Operation to gather new columns";
+
+    let arguments = (ins Variadic<Pandas_SeriesType>:$in_columns);
+    let results = (outs Variadic<Pandas_SeriesType>:$out_columns);
+
+    let assemblyFormat = [{
+        $in_columns `:` type($in_columns) attr-dict `->` type($out_columns)
     }];
 }
 
@@ -85,14 +115,24 @@ def Pandas_GetColumnOp : Pandas_Op<"get_column"> {
 }
 
 // sort by a column. 
-def Pandas_SortbyOp : Pandas_Op<"sortby"> {
+def Pandas_SortbyOp : Pandas_Op<"sortby", [InferTypeOpInterface]> {
     let summary = "Sort operation on a single column for pandas dataframe";
 
-    let arguments = (ins Pandas_DataframeType:$df_in, StrAttr:$column);
+    let arguments = (ins Pandas_DataframeType:$df_in, StrAttr:$column, StrAttr:$direction);
     let results = (outs Pandas_DataframeType:$df_out);
     let assemblyFormat = [{
-        `(` $df_in`:`type($df_in) `,` $column `)` attr-dict `:` type($df_out) 
+        `(` $df_in `:` qualified(type($df_in))`,` $column`,` $direction `)` attr-dict `:` qualified(type($df_out))
     }];
+
+      let extraClassDeclaration = [{
+    static mlir::LogicalResult inferReturnTypes(mlir::MLIRContext *context,
+          std::optional<::mlir::Location> location, mlir::ValueRange operands,
+          mlir::DictionaryAttr attributes, mlir::OpaqueProperties properties, mlir::RegionRange regions,
+          llvm::SmallVectorImpl<mlir::Type> &inferredReturnTypes) {
+      inferredReturnTypes.assign({*operands.getTypes().begin()});
+      return mlir::success();
+    }
+  }];
 }
 
 def Pandas_ConstIntOp : Pandas_Op<"const_int"> {
@@ -154,13 +194,13 @@ def Pandas_JoinOp : Pandas_Op<"join"> {
 
 // Filtering with a predicate like a where clause, return the boolean index to actually perform the reduction
 def Pandas_FilterOp : Pandas_Op<"filter"> {
-    let arguments = (ins Pandas_DataframeType:$df, 
-                        Arith_CmpFPredicateAttr:$predicate,
+    let arguments = (ins Pandas_DataframeType:$df_in, 
                         StrAttr:$column,
+                        Arith_CmpFPredicateAttr:$predicate,
                         StrAttr:$value);
     let results = (outs Pandas_SeriesType:$out);
     let assemblyFormat = [{
-        `(`$df `:` type($df)`,` $column $predicate $value`)` attr-dict `:` type($out)
+        `(`$df_in `:` type($df_in) `,` $column $predicate $value`)` attr-dict `:` type($out)
     }];
 }
 
@@ -224,10 +264,10 @@ def Pandas_AggcountOp : Pandas_Op<"agg_count"> {
 }
 
 def Pandas_PrintOp : Pandas_Op<"print"> {
-    let arguments = (ins AnyTypeOf<[Pandas_DataframeType, Pandas_SeriesType]>:$in);
-    let results = (outs AnyTypeOf<[Pandas_DataframeType, Pandas_SeriesType]>:$out);
+    let arguments = (ins AnyTypeOf<[Pandas_DataframeType, Pandas_SeriesType,
+        F64MemRef]>:$in);
     let assemblyFormat = [{
-        `(`$in `:` type($in)`)` attr-dict `:` type($out)
+        `(`$in `:` type($in)`)` attr-dict
     }];
 }
 

@@ -196,28 +196,36 @@ public:
     // Go through the file and assign each element
 
     // Generate a call to printf for the current element of the loop.
-    // auto printfRef = getOrInsertPrintf(rewriter, parentModule);
-    // auto scanfRef = getOrInsertScanf(rewriter, parentModule);
-    // auto fscanfRef = getOrInsertFscanf(rewriter, parentModule);
-    // auto fopenRef = getOrInsertFopen(rewriter, parentModule);
-    // std::string mode = "r";
-    // Value filenameConst = getOrCreateGlobalString(
-    //     loc, rewriter, "filename", StringRef(filename), parentModule);
-    // Value modeConst = getOrCreateGlobalString(loc, rewriter, "mode",
-    //                                           StringRef(mode), parentModule);
-    // Value newlineConst = getOrCreateGlobalString(loc, rewriter, "newline",
-    //                                              StringRef("\n"),
-    //                                              parentModule);
-    // Value scanformatConst = getOrCreateGlobalString(
-    //     loc, rewriter, "scanformat", StringRef("%d"), parentModule);
-    // // Notify the rewriter that this operation has been removed.
+    auto fopenRef = getOrInsertFopen(rewriter, parentModule);
+    auto fscanfRef = getOrInsertFscanf(rewriter, parentModule);
+    std::string mode = "r";
+    Value filenameConst = getOrCreateGlobalString(
+        loc, rewriter, filename, StringRef(filename), parentModule);
+    Value modeConst = getOrCreateGlobalString(loc, rewriter, mode,
+                                              StringRef(mode), parentModule);
+    Value newlineConst = getOrCreateGlobalString(loc, rewriter, "newline",
+                                                 StringRef("\n"),
+                                                 parentModule);
+    std::string scanfmt = "";
+    for (auto i = columns.begin(); i < columns.end(); i++) {
+      mlir::Type c_type = (*i).getType();
+      if (c_type.isInteger(32)) {
+        scanfmt += "%d,";
+      } else if (c_type.isF64()) {
+        scanfmt += "%f,";
+      } else {
+        scanfmt += "%s,";
+      }
+    }
+    Value scanfmtConst = getOrCreateGlobalString(loc, rewriter, scanfmt,
+                                              StringRef(scanfmt), parentModule);
 
-    // Value fl =
-    //     rewriter
-    //         .create<LLVM::CallOp>(
-    //             loc, LLVM::LLVMPointerType::get(parentModule.getContext()),
-    //             fopenRef, ArrayRef<Value>({filenameConst, modeConst}))
-    //         .getResult();
+    Value fopenOp =
+        rewriter
+            .create<LLVM::CallOp>(
+                loc, LLVM::LLVMPointerType::get(parentModule.getContext()),
+                fopenRef, ArrayRef<Value>({filenameConst, modeConst}))
+            .getResult();
     // Value cst0 =
     //     rewriter.create<LLVM::ConstantOp>(loc, rewriter.getI64Type(), 32);
     // rewriter.create<func::CallOp>(loc, fscanfRef,

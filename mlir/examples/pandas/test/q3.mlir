@@ -1,176 +1,176 @@
 module {
     func.func @q3() {
-        %customer_df = pandas.read_csv("/home/ajayakar/compiler-project/data/customer.csv") :
-                !pandas.df<<"c_custkey" : i32>,<"c_name" : !pandas.string>,
-                <"c_address" : !pandas.string>, <"c_nationkey" : i32>,
-                <"c_phone" : !pandas.string >, <"c_acctbal": f64>,
-                <"c_mktsegment" : !pandas.string>, <"c_comment": !pandas.string>>
-        %lineitem_df = pandas.read_csv("/home/ajayakar/compiler-project/data/lineitem.csv") : 
-            !pandas.df<<"l_orderkey":i32>, <"l_partkey":i32>, 
+        %customer_df = pd.read_csv("/home/ajayakar/compiler-project/data/customer.csv") :
+                !pd.df<<"c_custkey" : i32>,<"c_name" : !pd.string>,
+                <"c_address" : !pd.string>, <"c_nationkey" : i32>,
+                <"c_phone" : !pd.string >, <"c_acctbal": f64>,
+                <"c_mktsegment" : !pd.string>, <"c_comment": !pd.string>>
+        %lineitem_df = pd.read_csv("/home/ajayakar/compiler-project/data/lineitem.csv") : 
+            !pd.df<<"l_orderkey":i32>, <"l_partkey":i32>, 
             <"l_suppkey":i32>, <"l_linenumber":i32>,
             <"l_quantity":i32>, <"l_extendedprice":f64>, 
-            <"l_discount":f64>, <"l_tax":f64>, <"l_returnflag":!pandas.string>, 
-            <"l_linestatus":!pandas.string>, <"l_shipdate":!pandas.datetime>, 
-            <"l_commitdate":!pandas.datetime>, <"l_receiptdate":!pandas.datetime>, 
-            <"l_shipinstruct":!pandas.string>, <"l_shipmode":!pandas.string>, 
-            <"comments": !pandas.string>>
-        %order_df = pandas.read_csv("/home/ajayakar/compiler-project/data/orders.csv") :
-            !pandas.df<<"o_orderkey": i32>,<"o_custkey": i32>,
-            <"o_orderstatus": !pandas.string>,<"o_totalprice": i32>,
-            <"o_orderdate": !pandas.datetime>,<"o_orderpriority": !pandas.string>,
-            <"o_clerk": !pandas.string>, <"o_shippriority": i32>,
-            <"o_comment": !pandas.string>>
+            <"l_discount":f64>, <"l_tax":f64>, <"l_returnflag":!pd.string>, 
+            <"l_linestatus":!pd.string>, <"l_shipdate":!pd.datetime>, 
+            <"l_commitdate":!pd.datetime>, <"l_receiptdate":!pd.datetime>, 
+            <"l_shipinstruct":!pd.string>, <"l_shipmode":!pd.string>, 
+            <"comments": !pd.string>>
+        %order_df = pd.read_csv("/home/ajayakar/compiler-project/data/orders.csv") :
+            !pd.df<<"o_orderkey": i32>,<"o_custkey": i32>,
+            <"o_orderstatus": !pd.string>,<"o_totalprice": i32>,
+            <"o_orderdate": !pd.datetime>,<"o_orderpriority": !pd.string>,
+            <"o_clerk": !pd.string>, <"o_shippriority": i32>,
+            <"o_comment": !pd.string>>
 
-        %lineitem_filtered = pandas.select(%lineitem_df: 
-            !pandas.df<<"l_orderkey":i32>, <"l_partkey":i32>, 
+        %lineitem_filtered = pd.select(%lineitem_df: 
+            !pd.df<<"l_orderkey":i32>, <"l_partkey":i32>, 
             <"l_suppkey":i32>, <"l_linenumber":i32>,
             <"l_quantity":i32>, <"l_extendedprice":f64>, 
-            <"l_discount":f64>, <"l_tax":f64>, <"l_returnflag":!pandas.string>, 
-            <"l_linestatus":!pandas.string>, <"l_shipdate":!pandas.datetime>, 
-            <"l_commitdate":!pandas.datetime>, <"l_receiptdate":!pandas.datetime>, 
-            <"l_shipinstruct":!pandas.string>, <"l_shipmode":!pandas.string>, 
-            <"comments": !pandas.string>>,
+            <"l_discount":f64>, <"l_tax":f64>, <"l_returnflag":!pd.string>, 
+            <"l_linestatus":!pd.string>, <"l_shipdate":!pd.datetime>, 
+            <"l_commitdate":!pd.datetime>, <"l_receiptdate":!pd.datetime>, 
+            <"l_shipinstruct":!pd.string>, <"l_shipmode":!pd.string>, 
+            <"comments": !pd.string>>,
             ["l_orderkey", "l_extendedprice", "l_discount", "l_shipdate"]) : 
-            !pandas.df<<"l_orderkey":i32>, <"l_extendedprice":f64>, 
-            <"l_discount":f64>, <"l_shipdate":!pandas.datetime>>
+            !pd.df<<"l_orderkey":i32>, <"l_extendedprice":f64>, 
+            <"l_discount":f64>, <"l_shipdate":!pd.datetime>>
 
-        %orders_filtered = pandas.select(%order_df: 
-            !pandas.df<<"o_orderkey": i32>,<"o_custkey": i32>,
-            <"o_orderstatus": !pandas.string>,<"o_totalprice": i32>,
-            <"o_orderdate": !pandas.datetime>,<"o_orderpriority": !pandas.string>,
-            <"o_clerk": !pandas.string>, <"o_shippriority": i32>,
-            <"o_comment": !pandas.string>>, 
+        %orders_filtered = pd.select(%order_df: 
+            !pd.df<<"o_orderkey": i32>,<"o_custkey": i32>,
+            <"o_orderstatus": !pd.string>,<"o_totalprice": i32>,
+            <"o_orderdate": !pd.datetime>,<"o_orderpriority": !pd.string>,
+            <"o_clerk": !pd.string>, <"o_shippriority": i32>,
+            <"o_comment": !pd.string>>, 
             ["o_orderkey", "o_custkey", "o_orderdate", "o_shippriority"]) :
-            !pandas.df<<"o_orderkey": i32>,<"o_custkey": i32>,
-            <"o_orderdate": !pandas.datetime>, <"o_shippriority": i32>>
+            !pd.df<<"o_orderkey": i32>,<"o_custkey": i32>,
+            <"o_orderdate": !pd.datetime>, <"o_shippriority": i32>>
 
-        %customer_filtered = pandas.select(%customer_df: 
-                !pandas.df<<"c_custkey" : i32>,<"c_name" : !pandas.string>,
-                <"c_address" : !pandas.string>, <"c_nationkey" : i32>,
-                <"c_phone" : !pandas.string >, <"c_acctbal": f64>,
-                <"c_mktsegment" : !pandas.string>, <"c_comment": !pandas.string>>,
+        %customer_filtered = pd.select(%customer_df: 
+                !pd.df<<"c_custkey" : i32>,<"c_name" : !pd.string>,
+                <"c_address" : !pd.string>, <"c_nationkey" : i32>,
+                <"c_phone" : !pd.string >, <"c_acctbal": f64>,
+                <"c_mktsegment" : !pd.string>, <"c_comment": !pd.string>>,
                 ["c_mktsegment", "c_custkey"]) : 
-                !pandas.df<<"c_custkey" : i32>, <"c_mktsegment" : !pandas.string>>
+                !pd.df<<"c_custkey" : i32>, <"c_mktsegment" : !pd.string>>
         
-        %lsel = pandas.filter(%lineitem_filtered: !pandas.df<<"l_orderkey":i32>, <"l_extendedprice":f64>, 
-            <"l_discount":f64>, <"l_shipdate":!pandas.datetime>>,
-            "l_shipdate" oeq "1995-03-15" ) : !pandas.series<"lsel": i1>
-        %osel = pandas.filter(%orders_filtered: !pandas.df<<"o_orderkey": i32>,<"o_custkey": i32>,
-            <"o_orderdate": !pandas.datetime>, <"o_shippriority": i32>>,
-            "o_orderdate" oeq "1995-03-15" ) : !pandas.series<"osel": i1>
-        %csel = pandas.filter(%customer_filtered: !pandas.df<<"c_custkey" : i32>, <"c_mktsegment" : !pandas.string>>,
-            "c_mktsegment" true "BUILDING" ) : !pandas.series<"csel": i1>
+        %lsel = pd.filter(%lineitem_filtered: !pd.df<<"l_orderkey":i32>, <"l_extendedprice":f64>, 
+            <"l_discount":f64>, <"l_shipdate":!pd.datetime>>,
+            "l_shipdate" oeq "1995-03-15" ) : !pd.ser<"lsel": i1>
+        %osel = pd.filter(%orders_filtered: !pd.df<<"o_orderkey": i32>,<"o_custkey": i32>,
+            <"o_orderdate": !pd.datetime>, <"o_shippriority": i32>>,
+            "o_orderdate" oeq "1995-03-15" ) : !pd.ser<"osel": i1>
+        %csel = pd.filter(%customer_filtered: !pd.df<<"c_custkey" : i32>, <"c_mktsegment" : !pd.string>>,
+            "c_mktsegment" true "BUILDING" ) : !pd.ser<"csel": i1>
         
-        %flineitem = pandas.filter_reduce(%lineitem_filtered: !pandas.df<<"l_orderkey":i32>, <"l_extendedprice":f64>, 
-            <"l_discount":f64>, <"l_shipdate":!pandas.datetime>>,
-            %lsel: !pandas.series<"lsel": i1>) :
-            !pandas.df<<"l_orderkey":i32>, <"l_extendedprice":f64>, 
-            <"l_discount":f64>, <"l_shipdate":!pandas.datetime>>
-        %forders = pandas.filter_reduce(%orders_filtered: !pandas.df<<"o_orderkey": i32>,<"o_custkey": i32>,
-            <"o_orderdate": !pandas.datetime>, <"o_shippriority": i32>>,
-            %osel: !pandas.series<"osel": i1>) :
-            !pandas.df<<"o_orderkey": i32>,<"o_custkey": i32>,
-            <"o_orderdate": !pandas.datetime>, <"o_shippriority": i32>>
-        %fcustomer = pandas.filter_reduce(%customer_filtered: !pandas.df<<"c_custkey" : i32>, <"c_mktsegment" : !pandas.string>>,
-            %csel:  !pandas.series<"csel": i1>) : !pandas.df<<"c_custkey" : i32>, <"c_mktsegment" : !pandas.string>>
+        %flineitem = pd.filter_reduce(%lineitem_filtered: !pd.df<<"l_orderkey":i32>, <"l_extendedprice":f64>, 
+            <"l_discount":f64>, <"l_shipdate":!pd.datetime>>,
+            %lsel: !pd.ser<"lsel": i1>) :
+            !pd.df<<"l_orderkey":i32>, <"l_extendedprice":f64>, 
+            <"l_discount":f64>, <"l_shipdate":!pd.datetime>>
+        %forders = pd.filter_reduce(%orders_filtered: !pd.df<<"o_orderkey": i32>,<"o_custkey": i32>,
+            <"o_orderdate": !pd.datetime>, <"o_shippriority": i32>>,
+            %osel: !pd.ser<"osel": i1>) :
+            !pd.df<<"o_orderkey": i32>,<"o_custkey": i32>,
+            <"o_orderdate": !pd.datetime>, <"o_shippriority": i32>>
+        %fcustomer = pd.filter_reduce(%customer_filtered: !pd.df<<"c_custkey" : i32>, <"c_mktsegment" : !pd.string>>,
+            %csel:  !pd.ser<"csel": i1>) : !pd.df<<"c_custkey" : i32>, <"c_mktsegment" : !pd.string>>
         
-        %jn1 = pandas.join(%forders: !pandas.df<<"o_orderkey": i32>,<"o_custkey": i32>,
-            <"o_orderdate": !pandas.datetime>, <"o_shippriority": i32>>,
-            %fcustomer: !pandas.df<<"c_custkey" : i32>, <"c_mktsegment" : !pandas.string>>, 
+        %jn1 = pd.join(%forders: !pd.df<<"o_orderkey": i32>,<"o_custkey": i32>,
+            <"o_orderdate": !pd.datetime>, <"o_shippriority": i32>>,
+            %fcustomer: !pd.df<<"c_custkey" : i32>, <"c_mktsegment" : !pd.string>>, 
             ["o_custkey"], ["c_custkey"]) : 
-            !pandas.df<<"o_orderkey": i32>,<"o_custkey": i32>,
-            <"o_orderdate": !pandas.datetime>, <"o_shippriority": i32>, 
-            <"c_mktsegment" : !pandas.string>>
-        %jn2 = pandas.join(%jn1: 
-            !pandas.df<<"o_orderkey": i32>,<"o_custkey": i32>,
-            <"o_orderdate": !pandas.datetime>, <"o_shippriority": i32>, 
-            <"c_mktsegment" : !pandas.string>>,
-            %flineitem: !pandas.df<<"l_orderkey":i32>, <"l_extendedprice":f64>, 
-            <"l_discount":f64>, <"l_shipdate":!pandas.datetime>>,
+            !pd.df<<"o_orderkey": i32>,<"o_custkey": i32>,
+            <"o_orderdate": !pd.datetime>, <"o_shippriority": i32>, 
+            <"c_mktsegment" : !pd.string>>
+        %jn2 = pd.join(%jn1: 
+            !pd.df<<"o_orderkey": i32>,<"o_custkey": i32>,
+            <"o_orderdate": !pd.datetime>, <"o_shippriority": i32>, 
+            <"c_mktsegment" : !pd.string>>,
+            %flineitem: !pd.df<<"l_orderkey":i32>, <"l_extendedprice":f64>, 
+            <"l_discount":f64>, <"l_shipdate":!pd.datetime>>,
             ["o_orderkey"], ["l_orderkey"]) :
-            !pandas.df<<"l_orderkey": i32>,<"o_custkey": i32>,
-            <"o_orderdate": !pandas.datetime>, <"o_shippriority": i32>, 
-            <"c_mktsegment" : !pandas.string>, <"l_extendedprice":f64>, 
-            <"l_discount":f64>, <"l_shipdate":!pandas.datetime>>
+            !pd.df<<"l_orderkey": i32>,<"o_custkey": i32>,
+            <"o_orderdate": !pd.datetime>, <"o_shippriority": i32>, 
+            <"c_mktsegment" : !pd.string>, <"l_extendedprice":f64>, 
+            <"l_discount":f64>, <"l_shipdate":!pd.datetime>>
         
-        %jn2_ldisc = pandas.get_column(%jn2: !pandas.df<<"l_orderkey": i32>,<"o_custkey": i32>,
-            <"o_orderdate": !pandas.datetime>, <"o_shippriority": i32>, 
-            <"c_mktsegment" : !pandas.string>, <"l_extendedprice":f64>, 
-            <"l_discount":f64>, <"l_shipdate":!pandas.datetime>>,
-            "l_discount") : !pandas.series<"l_discount": f64>
-        %const1 = pandas.const_float(1.0): !pandas.series<"const": f64>
-        %sub1 = pandas.sub(%const1: !pandas.series<"const": f64>,
-                    %jn2_ldisc: !pandas.series<"l_discount": f64>) :
-                    !pandas.series<"sub": f64>
-        %jn2_revenue = pandas.multiply(%jn2_ldisc: !pandas.series<"l_discount": f64>,
-                        %sub1: !pandas.series<"sub": f64>) : !pandas.series<"jn2_revenue": f64>
+        %jn2_ldisc = pd.get_column(%jn2: !pd.df<<"l_orderkey": i32>,<"o_custkey": i32>,
+            <"o_orderdate": !pd.datetime>, <"o_shippriority": i32>, 
+            <"c_mktsegment" : !pd.string>, <"l_extendedprice":f64>, 
+            <"l_discount":f64>, <"l_shipdate":!pd.datetime>>,
+            "l_discount") : !pd.ser<"l_discount": f64>
+        %const1 = pd.const_float(1.0): !pd.ser<"const": f64>
+        %sub1 = pd.sub(%const1: !pd.ser<"const": f64>,
+                    %jn2_ldisc: !pd.ser<"l_discount": f64>) :
+                    !pd.ser<"sub": f64>
+        %jn2_revenue = pd.multiply(%jn2_ldisc: !pd.ser<"l_discount": f64>,
+                        %sub1: !pd.ser<"sub": f64>) : !pd.ser<"jn2_revenue": f64>
         
-        %jn2_1 = pandas.add_column(%jn2: !pandas.df<<"l_orderkey": i32>,<"o_custkey": i32>,
-            <"o_orderdate": !pandas.datetime>, <"o_shippriority": i32>, 
-            <"c_mktsegment" : !pandas.string>, <"l_extendedprice":f64>, 
-            <"l_discount":f64>, <"l_shipdate":!pandas.datetime>>,
-            %jn2_revenue: !pandas.series<"jn2_revenue": f64>,
-            "revenue") : !pandas.df<<"l_orderkey": i32>,<"o_custkey": i32>,
-            <"o_orderdate": !pandas.datetime>, <"o_shippriority": i32>, 
-            <"c_mktsegment" : !pandas.string>, <"l_extendedprice":f64>, 
-            <"l_discount":f64>, <"l_shipdate":!pandas.datetime>,
+        %jn2_1 = pd.add_column(%jn2: !pd.df<<"l_orderkey": i32>,<"o_custkey": i32>,
+            <"o_orderdate": !pd.datetime>, <"o_shippriority": i32>, 
+            <"c_mktsegment" : !pd.string>, <"l_extendedprice":f64>, 
+            <"l_discount":f64>, <"l_shipdate":!pd.datetime>>,
+            %jn2_revenue: !pd.ser<"jn2_revenue": f64>,
+            "revenue") : !pd.df<<"l_orderkey": i32>,<"o_custkey": i32>,
+            <"o_orderdate": !pd.datetime>, <"o_shippriority": i32>, 
+            <"c_mktsegment" : !pd.string>, <"l_extendedprice":f64>, 
+            <"l_discount":f64>, <"l_shipdate":!pd.datetime>,
             <"revenue": f64>>
 
-        %groupby = pandas.groupby(%jn2_1: !pandas.df<<"l_orderkey": i32>,<"o_custkey": i32>,
-            <"o_orderdate": !pandas.datetime>, <"o_shippriority": i32>, 
-            <"c_mktsegment" : !pandas.string>, <"l_extendedprice":f64>, 
-            <"l_discount":f64>, <"l_shipdate":!pandas.datetime>,
+        %groupby = pd.groupby(%jn2_1: !pd.df<<"l_orderkey": i32>,<"o_custkey": i32>,
+            <"o_orderdate": !pd.datetime>, <"o_shippriority": i32>, 
+            <"c_mktsegment" : !pd.string>, <"l_extendedprice":f64>, 
+            <"l_discount":f64>, <"l_shipdate":!pd.datetime>,
             <"revenue": f64>>, ["l_orderkey", "o_orderdate", "o_shippriority"]) :
-            !pandas.df<<"l_orderkey": i32>,<"o_custkey": !pandas.group<i32>>,
-            <"o_orderdate": !pandas.datetime>, <"o_shippriority": i32>, 
-            <"c_mktsegment" : !pandas.group<!pandas.string>>, <"l_extendedprice":!pandas.group<f64>>, 
-            <"l_discount":!pandas.group<f64>>, <"l_shipdate":!pandas.group<!pandas.datetime>>,
-            <"revenue": !pandas.group<f64>>>
+            !pd.df<<"l_orderkey": i32>,<"o_custkey": !pd.group<i32>>,
+            <"o_orderdate": !pd.datetime>, <"o_shippriority": i32>, 
+            <"c_mktsegment" : !pd.group<!pd.string>>, <"l_extendedprice":!pd.group<f64>>, 
+            <"l_discount":!pd.group<f64>>, <"l_shipdate":!pd.group<!pd.datetime>>,
+            <"revenue": !pd.group<f64>>>
         
-        %aggsum = pandas.agg_sum(%groupby: !pandas.df<<"l_orderkey": i32>,<"o_custkey": !pandas.group<i32>>,
-            <"o_orderdate": !pandas.datetime>, <"o_shippriority": i32>, 
-            <"c_mktsegment" : !pandas.group<!pandas.string>>, <"l_extendedprice":!pandas.group<f64>>, 
-            <"l_discount":!pandas.group<f64>>, <"l_shipdate":!pandas.group<!pandas.datetime>>,
-            <"revenue": !pandas.group<f64>>>, ["revenue"]) : !pandas.df<<"l_orderkey": i32>,<"o_custkey": !pandas.group<i32>>,
-            <"o_orderdate": !pandas.datetime>, <"o_shippriority": i32>, 
-            <"c_mktsegment" : !pandas.group<!pandas.string>>, <"l_extendedprice":!pandas.group<f64>>, 
-            <"l_discount":!pandas.group<f64>>, <"l_shipdate":!pandas.group<!pandas.datetime>>,
+        %aggsum = pd.agg_sum(%groupby: !pd.df<<"l_orderkey": i32>,<"o_custkey": !pd.group<i32>>,
+            <"o_orderdate": !pd.datetime>, <"o_shippriority": i32>, 
+            <"c_mktsegment" : !pd.group<!pd.string>>, <"l_extendedprice":!pd.group<f64>>, 
+            <"l_discount":!pd.group<f64>>, <"l_shipdate":!pd.group<!pd.datetime>>,
+            <"revenue": !pd.group<f64>>>, ["revenue"]) : !pd.df<<"l_orderkey": i32>,<"o_custkey": !pd.group<i32>>,
+            <"o_orderdate": !pd.datetime>, <"o_shippriority": i32>, 
+            <"c_mktsegment" : !pd.group<!pd.string>>, <"l_extendedprice":!pd.group<f64>>, 
+            <"l_discount":!pd.group<f64>>, <"l_shipdate":!pd.group<!pd.datetime>>,
             <"revenue": f64>>
 
-        %sorted = pandas.sortby(%aggsum: !pandas.df<<"l_orderkey": i32>,<"o_custkey": !pandas.group<i32>>,
-            <"o_orderdate": !pandas.datetime>, <"o_shippriority": i32>, 
-            <"c_mktsegment" : !pandas.group<!pandas.string>>, <"l_extendedprice":!pandas.group<f64>>, 
-            <"l_discount":!pandas.group<f64>>, <"l_shipdate":!pandas.group<!pandas.datetime>>,
-            <"revenue": f64>>, "revenue") : 
-            !pandas.df<<"l_orderkey": i32>,<"o_custkey": !pandas.group<i32>>,
-            <"o_orderdate": !pandas.datetime>, <"o_shippriority": i32>, 
-            <"c_mktsegment" : !pandas.group<!pandas.string>>, <"l_extendedprice":!pandas.group<f64>>, 
-            <"l_discount":!pandas.group<f64>>, <"l_shipdate":!pandas.group<!pandas.datetime>>,
+        %sorted = pd.sortby(%aggsum: !pd.df<<"l_orderkey": i32>,<"o_custkey": !pd.group<i32>>,
+            <"o_orderdate": !pd.datetime>, <"o_shippriority": i32>, 
+            <"c_mktsegment" : !pd.group<!pd.string>>, <"l_extendedprice":!pd.group<f64>>, 
+            <"l_discount":!pd.group<f64>>, <"l_shipdate":!pd.group<!pd.datetime>>,
+            <"revenue": f64>>, "revenue", "asc") : 
+            !pd.df<<"l_orderkey": i32>,<"o_custkey": !pd.group<i32>>,
+            <"o_orderdate": !pd.datetime>, <"o_shippriority": i32>, 
+            <"c_mktsegment" : !pd.group<!pd.string>>, <"l_extendedprice":!pd.group<f64>>, 
+            <"l_discount":!pd.group<f64>>, <"l_shipdate":!pd.group<!pd.datetime>>,
             <"revenue": f64>>
 
-        %first_ten = pandas.filter_range %sorted: !pandas.df<<"l_orderkey": i32>,<"o_custkey": !pandas.group<i32>>,
-            <"o_orderdate": !pandas.datetime>, <"o_shippriority": i32>, 
-            <"c_mktsegment" : !pandas.group<!pandas.string>>, <"l_extendedprice":!pandas.group<f64>>, 
-            <"l_discount":!pandas.group<f64>>, <"l_shipdate":!pandas.group<!pandas.datetime>>,
+        %first_ten = pd.filter_range %sorted: !pd.df<<"l_orderkey": i32>,<"o_custkey": !pd.group<i32>>,
+            <"o_orderdate": !pd.datetime>, <"o_shippriority": i32>, 
+            <"c_mktsegment" : !pd.group<!pd.string>>, <"l_extendedprice":!pd.group<f64>>, 
+            <"l_discount":!pd.group<f64>>, <"l_shipdate":!pd.group<!pd.datetime>>,
             <"revenue": f64>> [0:10] 
-            !pandas.df<<"l_orderkey": i32>,<"o_custkey": !pandas.group<i32>>,
-            <"o_orderdate": !pandas.datetime>, <"o_shippriority": i32>, 
-            <"c_mktsegment" : !pandas.group<!pandas.string>>, <"l_extendedprice":!pandas.group<f64>>, 
-            <"l_discount":!pandas.group<f64>>, <"l_shipdate":!pandas.group<!pandas.datetime>>,
+            !pd.df<<"l_orderkey": i32>,<"o_custkey": !pd.group<i32>>,
+            <"o_orderdate": !pd.datetime>, <"o_shippriority": i32>, 
+            <"c_mktsegment" : !pd.group<!pd.string>>, <"l_extendedprice":!pd.group<f64>>, 
+            <"l_discount":!pd.group<f64>>, <"l_shipdate":!pd.group<!pd.datetime>>,
             <"revenue": f64>>
 
-        %final_out = pandas.select(%first_ten: !pandas.df<<"l_orderkey": i32>,<"o_custkey": !pandas.group<i32>>,
-            <"o_orderdate": !pandas.datetime>, <"o_shippriority": i32>, 
-            <"c_mktsegment" : !pandas.group<!pandas.string>>, <"l_extendedprice":!pandas.group<f64>>, 
-            <"l_discount":!pandas.group<f64>>, <"l_shipdate":!pandas.group<!pandas.datetime>>,
+        %final_out = pd.select(%first_ten: !pd.df<<"l_orderkey": i32>,<"o_custkey": !pd.group<i32>>,
+            <"o_orderdate": !pd.datetime>, <"o_shippriority": i32>, 
+            <"c_mktsegment" : !pd.group<!pd.string>>, <"l_extendedprice":!pd.group<f64>>, 
+            <"l_discount":!pd.group<f64>>, <"l_shipdate":!pd.group<!pd.datetime>>,
             <"revenue": f64>>, 
             ["l_orderkey", "revenue", "o_orderdate", "o_shippriority"]) :
-            !pandas.df<<"l_orderkey": i32>,
-            <"o_orderdate": !pandas.datetime>, <"o_shippriority": i32>, 
+            !pd.df<<"l_orderkey": i32>,
+            <"o_orderdate": !pd.datetime>, <"o_shippriority": i32>, 
             <"revenue": f64>>
 
-        pandas.print(%final_out: !pandas.df<<"l_orderkey": i32>,
-            <"o_orderdate": !pandas.datetime>, <"o_shippriority": i32>, 
+        pd.print(%final_out: !pd.df<<"l_orderkey": i32>,
+            <"o_orderdate": !pd.datetime>, <"o_shippriority": i32>, 
             <"revenue": f64>>)
         return
     }

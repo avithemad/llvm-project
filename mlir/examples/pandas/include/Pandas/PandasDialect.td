@@ -16,7 +16,7 @@ include "mlir/IR/OpBase.td"
 //===----------------------------------------------------------------------===//
 
 def Pandas_Dialect : Dialect {
-    let name = "pandas";
+    let name = "pd";
     let summary = "A pandas out-of-tree MLIR dialect.";
     let description = [{
         This dialect is an example of an out-of-tree MLIR dialect designed to
